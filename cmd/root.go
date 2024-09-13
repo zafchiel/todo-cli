@@ -16,7 +16,7 @@ type Todo struct {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "todo-cli",
+	Use:   "tc",
 	Short: "tc (todo-cli) manages todos with files",
 	Long: `A simple CLI application for managing your todos using files.
 						It allows you to create, list, update, and delete todos
