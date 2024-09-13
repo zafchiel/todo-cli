@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -26,7 +27,11 @@ var addTodo = &cobra.Command{
 				panic("Error getting last id")
 			}
 
-			todo := &Todo{id: lastID + 1, desc: desc}
+			todo := &Todo{
+				id:        lastID + 1,
+				desc:      desc,
+				createdAt: time.Now(),
+			}
 
 			file, err := os.OpenFile("todos.csv", os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
 			if err != nil {
