@@ -84,6 +84,19 @@ func getLastID() int {
 	}
 
 	if lastLine == nil {
+		// Create Headers
+		writer := csv.NewWriter(file)
+		defer writer.Flush()
+
+		if err := writer.Write([]string{
+			"ID",
+			"Description",
+			"CreatedAt",
+			"IsCompleted",
+		}); err != nil {
+			fmt.Println("Error while creating headers: ", err)
+		}
+
 		return 0
 	}
 
