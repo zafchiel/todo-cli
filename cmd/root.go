@@ -3,9 +3,17 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 )
+
+type Todo struct {
+	id          int
+	desc        string
+	createdAt   time.Time
+	isCompleted bool
+}
 
 var rootCmd = &cobra.Command{
 	Use:   "todo-cli",
