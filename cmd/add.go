@@ -21,7 +21,12 @@ var addTodo = &cobra.Command{
 		if len(args) > 0 {
 			desc := args[0]
 			fmt.Println(desc)
-			todo := &Todo{desc: desc}
+			lastID := getLastID()
+			if lastID == -1 {
+				panic("Error getting last id")
+			}
+
+			todo := &Todo{id: lastID + 1, desc: desc}
 
 			file, err := os.OpenFile("todos.csv", os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
 			if err != nil {
@@ -33,7 +38,14 @@ var addTodo = &cobra.Command{
 			writer := csv.NewWriter(file)
 			defer writer.Flush()
 
-			err = writer.Write([]string{strconv.Itoa(todo.id), todo.desc, todo.createdAt.String(), strconv.FormatBool(todo.isCompleted)})
+			newTodoSlice := []string{
+				strconv.Itoa(todo.id),
+				todo.desc,
+				todo.createdAt.String(),
+				strconv.FormatBool(todo.isCompleted),
+			}
+
+			err = writer.Write(newTodoSlice)
 			if err != nil {
 				fmt.Println("Error wrtiing file: ", err)
 				return
@@ -45,4 +57,36 @@ var addTodo = &cobra.Command{
 			fmt.Println("No description provided")
 		}
 	},
+}
+
+func getLastID() int {
+	file, err := os.OpenFile("todos.csv", os.O_RDONLY|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		fmt.Println("Error while opening file: ", err)
+		return -1
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	var lastLine []string
+
+	for {
+		row, err := reader.Read()
+		if err != nil {
+			break
+		}
+		lastLine = row
+	}
+
+	if lastLine == nil {
+		return 0
+	}
+
+	lastID, err := strconv.Atoi(lastLine[0])
+	if err != nil {
+		fmt.Println("Error parsing id: ", err)
+		return -1
+	}
+
+	return lastID
 }
