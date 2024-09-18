@@ -60,7 +60,7 @@ func writeTodo(todo *Todo) error {
 }
 
 func getLastID() int {
-	file, err := os.OpenFile("todos.csv", os.O_RDONLY|os.O_CREATE, 0644)
+	file, err := os.OpenFile("todos.csv", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error opening file: %v\n", err)
 		return -1
