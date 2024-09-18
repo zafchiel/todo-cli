@@ -12,7 +12,10 @@ import (
 
 func init() {
 	rootCmd.AddCommand(listTodos)
+	listTodos.Flags().BoolVarP(&All, "all", "a", false, "List all todos")
 }
+
+var All bool
 
 var listTodos = &cobra.Command{
 	Use:   "list",
@@ -42,6 +45,16 @@ var listTodos = &cobra.Command{
 		defer w.Flush()
 
 		reader := csv.NewReader(file)
+
+		// Display heder
+		header, err := reader.Read()
+		if err != nil {
+			fmt.Fprint(os.Stderr, "Error reading header from csv, ", err)
+			return
+		}
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", header[0], header[1], header[2], header[3])
+
+		// Print rows
 		for {
 			row, err := reader.Read()
 			if err == io.EOF {
@@ -52,7 +65,10 @@ var listTodos = &cobra.Command{
 				return
 			}
 
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", row[0], row[1], row[2], row[3])
+			if All || row[3] == "false" {
+				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", row[0], row[1], row[2], row[3])
+			}
+
 		}
 
 	},
