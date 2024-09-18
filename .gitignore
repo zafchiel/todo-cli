@@ -21,7 +21,6 @@ go.work
 .vscode/
 .idea/
 .idx/
-.idx
 
 # OS-specific files
 .DS_Store
