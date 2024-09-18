@@ -12,16 +12,16 @@ import (
 
 func init() {
 	rootCmd.AddCommand(listTodos)
-	listTodos.Flags().BoolVarP(&All, "all", "a", false, "List all todos")
+	listTodos.Flags().BoolVarP(&listAll, "all", "a", false, "List all todos including completed ones")
 }
 
-var All bool
+var listAll bool
 
 var listTodos = &cobra.Command{
 	Use:   "list",
-	Short: "List all todos",
+	Short: "List uncompleted todos",
 	Run: func(cmd *cobra.Command, args []string) {
-		file, err := os.OpenFile("todos.csv", os.O_RDONLY, 0644)
+		file, err := os.Open("todos.csv")
 		if err != nil {
 			fmt.Fprint(os.Stderr, "Error opening a file: ", err)
 			return
@@ -40,8 +40,7 @@ var listTodos = &cobra.Command{
 			return
 		}
 
-		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+		w := tabwriter.NewWriter(os.Stdout, 0, 8, 3, '\t', 0)
 		defer w.Flush()
 
 		reader := csv.NewReader(file)
@@ -52,7 +51,7 @@ var listTodos = &cobra.Command{
 			fmt.Fprint(os.Stderr, "Error reading header from csv, ", err)
 			return
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", header[0], header[1], header[2], header[3])
+		printTab(w, header)
 
 		// Print rows
 		for {
@@ -65,11 +64,15 @@ var listTodos = &cobra.Command{
 				return
 			}
 
-			if All || row[3] == "false" {
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", row[0], row[1], row[2], row[3])
+			if listAll || row[3] == "false" {
+				printTab(w, row)
 			}
 
 		}
 
 	},
+}
+
+func printTab(w *tabwriter.Writer, row []string) {
+	fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", row[0], row[1], row[2], row[3])
 }
