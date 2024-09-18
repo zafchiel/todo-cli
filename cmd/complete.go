@@ -29,6 +29,7 @@ var completeTodo = &cobra.Command{
 		reader := csv.NewReader(file)
 
 		var newRows [][]string
+		var found bool
 
 		for {
 			row, err := reader.Read()
@@ -42,9 +43,15 @@ var completeTodo = &cobra.Command{
 			if row[0] == id {
 				fmt.Fprint(os.Stdout, "FOUND TODO, ", id)
 				row[3] = "true"
+				found = true
 			}
 
 			newRows = append(newRows, row)
+		}
+
+		if !found {
+			fmt.Fprintf(os.Stderr, "Todo of ID - %s not found\n", id)
+			return
 		}
 
 		file.Seek(0, 0)
