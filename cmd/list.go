@@ -1,7 +1,11 @@
 package cmd
 
 import (
+	"encoding/csv"
 	"fmt"
+	"io"
+	"os"
+	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 )
@@ -11,8 +15,45 @@ func init() {
 }
 
 var listTodos = &cobra.Command{
-	Use: "all",
+	Use:   "list",
+	Short: "List all todos",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Delete todo invoked")
+		file, err := os.OpenFile("todos.csv", os.O_RDONLY, 0644)
+		if err != nil {
+			fmt.Fprint(os.Stderr, "Error opening a file: ", err)
+			return
+		}
+		defer file.Close()
+
+		// Check if the file is empty
+		fileInfo, err := file.Stat()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error getting file info:", err)
+			return
+		}
+
+		if fileInfo.Size() == 0 {
+			fmt.Println("No todos found.")
+			return
+		}
+
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+		defer w.Flush()
+
+		reader := csv.NewReader(file)
+		for {
+			row, err := reader.Read()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				fmt.Fprint(os.Stderr, "Error reading csv, ", err)
+				return
+			}
+
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", row[0], row[1], row[2], row[3])
+		}
+
 	},
 }
