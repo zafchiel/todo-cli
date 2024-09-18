@@ -6,7 +6,9 @@ import (
 	"io"
 	"os"
 	"text/tabwriter"
+	"time"
 
+	"github.com/mergestat/timediff"
 	"github.com/spf13/cobra"
 )
 
@@ -51,7 +53,7 @@ var listTodos = &cobra.Command{
 			fmt.Fprint(os.Stderr, "Error reading header from csv, ", err)
 			return
 		}
-		printTab(w, header)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", header[0], header[1], header[2], header[3])
 
 		// Print rows
 		for {
@@ -65,7 +67,7 @@ var listTodos = &cobra.Command{
 			}
 
 			if listAll || row[3] == "false" {
-				printTab(w, row)
+				printRowTab(w, row)
 			}
 
 		}
@@ -73,6 +75,12 @@ var listTodos = &cobra.Command{
 	},
 }
 
-func printTab(w *tabwriter.Writer, row []string) {
-	fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", row[0], row[1], row[2], row[3])
+func printRowTab(w *tabwriter.Writer, row []string) {
+	createdAt, err := time.Parse("2006-01-02T15:04:05Z07:00", row[2])
+	if err != nil {
+		fmt.Fprint(os.Stderr, "Error parsing created at time: ", err)
+		return
+	}
+	diff := timediff.TimeDiff(createdAt)
+	fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", row[0], row[1], diff, row[3])
 }
