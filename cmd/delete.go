@@ -18,7 +18,6 @@ var deleteTodo = &cobra.Command{
 	Short: "Delete a todo",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Delete todo invoked")
 		id := args[0]
 
 		file, err := os.OpenFile("todos.csv", os.O_RDWR, 0644)
@@ -26,31 +25,43 @@ var deleteTodo = &cobra.Command{
 			fmt.Fprint(os.Stderr, "Error opening a file: ", err)
 			return
 		}
-
 		defer file.Close()
 
 		reader := csv.NewReader(file)
 		var newRows [][]string
+		var found bool
 
 		for {
 			row, err := reader.Read()
+			if err == io.EOF {
+				// End of file
+				break
+			}
 			if err != nil {
-				if err == io.EOF {
-					// End of file
-					break
-				}
 				fmt.Fprint(os.Stderr, "Error reading csv, ", err)
 				return
 			}
 			if row[0] == id {
 				// Dont add to new rows
+				found = false
 			} else {
 				newRows = append(newRows, row)
 			}
 		}
 
-		file.Seek(0, 0)
-		file.Truncate(0)
+		if !found {
+			fmt.Fprint(os.Stderr, "Todo not found\n")
+			return
+		}
+
+		if _, err := file.Seek(0, 0); err != nil {
+			fmt.Fprint(os.Stderr, "Error seeking to start of file: ", err)
+			return
+		}
+		if err := file.Truncate(0); err != nil {
+			fmt.Fprint(os.Stderr, "Error truncating file: ", err)
+			return
+		}
 
 		writer := csv.NewWriter(file)
 		if err := writer.WriteAll(newRows); err != nil {
