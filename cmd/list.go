@@ -15,9 +15,11 @@ import (
 func init() {
 	rootCmd.AddCommand(listTodos)
 	listTodos.Flags().BoolVarP(&listAll, "all", "a", false, "List all todos including completed ones")
+	listTodos.Flags().BoolVarP(&preciseTime, "precise", "p", false, "Display CreatedAt as precise time")
 }
 
 var listAll bool
+var preciseTime bool
 
 var listTodos = &cobra.Command{
 	Use:   "list",
@@ -67,7 +69,7 @@ var listTodos = &cobra.Command{
 			}
 
 			if listAll || row[3] == "false" {
-				printRowTab(w, row)
+				printRowTab(w, row, preciseTime)
 			}
 
 		}
@@ -75,12 +77,16 @@ var listTodos = &cobra.Command{
 	},
 }
 
-func printRowTab(w *tabwriter.Writer, row []string) {
-	createdAt, err := time.Parse("2006-01-02T15:04:05Z07:00", row[2])
-	if err != nil {
-		fmt.Fprint(os.Stderr, "Error parsing created at time: ", err)
-		return
+func printRowTab(w *tabwriter.Writer, row []string, preciseTime bool) {
+	if preciseTime {
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", row[0], row[1], row[2], row[3])
+	} else {
+		createdAt, err := time.Parse("2006-01-02T15:04:05Z07:00", row[2])
+		if err != nil {
+			fmt.Fprint(os.Stderr, "Error parsing created at time: ", err)
+			return
+		}
+		diff := timediff.TimeDiff(createdAt)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", row[0], row[1], diff, row[3])
 	}
-	diff := timediff.TimeDiff(createdAt)
-	fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", row[0], row[1], diff, row[3])
 }
