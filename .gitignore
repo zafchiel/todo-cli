@@ -38,3 +38,5 @@ Thumbs.db
 
 # Binary output
 todo-cli
+todoc
+build/
